@@ -63,8 +63,8 @@ html, body {
 #hud-top.visible, #hud-bottom.visible { opacity: 1; }
 
 .hud-left, .hud-right { display: flex; align-items: center; gap: 12px; }
-.hud-label { font-size: 10px; letter-spacing: 0.15em; color: rgba(0,247,255,0.45); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hud-val   { font-size: 10px; letter-spacing: 0.1em;  color: var(--cyan); white-space: nowrap; }
+.hud-label { font-size: 13px; letter-spacing: 0.12em; color: rgba(0,247,255,0.45); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-val   { font-size: 13px; letter-spacing: 0.08em; color: var(--cyan); white-space: nowrap; }
 .hud-sep   { color: rgba(0,247,255,0.2); }
 
 /* ============================================================
@@ -94,9 +94,9 @@ html, body {
    ASCII PORTRAIT
    ============================================================ */
 #portrait {
-  font-size: 13px;
-  line-height: 1.18;
-  letter-spacing: 0.04em;
+  font-size: 18px;
+  line-height: 1.2;
+  letter-spacing: 0.05em;
   white-space: pre;
   user-select: none;
   text-shadow: 0 0 6px rgba(0,247,255,0.3);
@@ -113,11 +113,11 @@ html, body {
 }
 #identity.visible { opacity: 1; }
 #identity h1 {
-  font-size: 16px; letter-spacing: 0.45em;
-  color: var(--white); text-transform: uppercase; margin-bottom: 8px;
+  font-size: 24px; letter-spacing: 0.4em;
+  color: var(--white); text-transform: uppercase; margin-bottom: 10px;
 }
 #identity p {
-  font-size: 12px; letter-spacing: 0.3em;
+  font-size: 16px; letter-spacing: 0.25em;
   color: var(--cyan-40); text-transform: uppercase;
 }
 
@@ -142,12 +142,12 @@ html, body {
 .cs-node:hover .cs-title { color: var(--magenta); }
 .cs-node:hover .cs-tag  { border-color: var(--magenta); color: var(--magenta); }
 
-.cs-id    { font-size: 13px; letter-spacing: 0.2em; color: var(--cyan);
+.cs-id    { font-size: 16px; letter-spacing: 0.2em; color: var(--cyan);
             text-shadow: 0 0 6px var(--cyan); transition: all 0.2s; }
-.cs-title { font-size: 12px; letter-spacing: 0.18em; color: var(--white);
+.cs-title { font-size: 14px; letter-spacing: 0.15em; color: var(--white);
             text-transform: uppercase; transition: all 0.2s; }
-.cs-tag   { font-size: 11px; letter-spacing: 0.1em; color: rgba(122,0,255,0.8);
-            border: 1px solid rgba(122,0,255,0.35); padding: 3px 10px;
+.cs-tag   { font-size: 12px; letter-spacing: 0.08em; color: rgba(122,0,255,0.8);
+            border: 1px solid rgba(122,0,255,0.35); padding: 4px 12px;
             transition: all 0.2s; }
 
 /* ============================================================
@@ -164,8 +164,8 @@ html, body {
   display: flex; justify-content: space-between; align-items: center;
   padding: 6px 0; border-bottom: 1px solid rgba(0,247,255,0.07);
 }
-.info-key { font-size: 10px; letter-spacing: 0.12em; color: rgba(0,247,255,0.35); text-transform: uppercase; }
-.info-val { font-size: 10px; letter-spacing: 0.05em; color: var(--white); }
+.info-key { font-size: 13px; letter-spacing: 0.1em; color: rgba(0,247,255,0.35); text-transform: uppercase; }
+.info-val { font-size: 13px; letter-spacing: 0.05em; color: var(--white); }
 .info-val.cyan { color: var(--cyan); }
 
 /* ============================================================
