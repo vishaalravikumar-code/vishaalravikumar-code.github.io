@@ -1,0 +1,206 @@
+/* ============================================================
+   RESET + BASE
+   ============================================================ */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:      #080812;
+  --cyan:    #00F7FF;
+  --magenta: #FF00AA;
+  --purple:  #7A00FF;
+  --white:   #D6D6FF;
+  --cyan-10: rgba(0,247,255,0.10);
+  --cyan-20: rgba(0,247,255,0.20);
+  --cyan-40: rgba(0,247,255,0.40);
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--white);
+  font-family: 'Courier New', Courier, monospace;
+  cursor: crosshair;
+}
+
+/* ============================================================
+   CRT OVERLAY
+   ============================================================ */
+#crt {
+  position: fixed; inset: 0; z-index: 900; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent 0px, transparent 2px,
+    rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px
+  );
+}
+
+/* ============================================================
+   CORNER CHROME
+   ============================================================ */
+.corner {
+  position: fixed; width: 60px; height: 60px; z-index: 50; pointer-events: none;
+  opacity: 0; transition: opacity 1s;
+}
+.corner.visible { opacity: 0.6; }
+.corner-tl { top: 20px; left: 20px; border-top: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+.corner-tr { top: 20px; right: 20px; border-top: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+.corner-bl { bottom: 20px; left: 20px; border-bottom: 1px solid var(--cyan); border-left: 1px solid var(--cyan); }
+.corner-br { bottom: 20px; right: 20px; border-bottom: 1px solid var(--cyan); border-right: 1px solid var(--cyan); }
+
+/* ============================================================
+   HUD BARS
+   ============================================================ */
+#hud-top, #hud-bottom {
+  position: fixed; left: 0; right: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 28px; height: 34px;
+  background: rgba(8,8,18,0.85);
+  opacity: 0; transition: opacity 1s;
+}
+#hud-top { top: 0; border-bottom: 1px solid rgba(0,247,255,0.12); }
+#hud-bottom { bottom: 0; border-top: 1px solid rgba(0,247,255,0.12); }
+#hud-top.visible, #hud-bottom.visible { opacity: 1; }
+
+.hud-left, .hud-right { display: flex; align-items: center; gap: 12px; }
+.hud-label { font-size: 8px; letter-spacing: 0.25em; color: rgba(0,247,255,0.45); text-transform: uppercase; }
+.hud-val   { font-size: 8px; letter-spacing: 0.1em;  color: var(--cyan); }
+.hud-sep   { color: rgba(0,247,255,0.2); }
+
+/* ============================================================
+   BACKGROUND CANVAS
+   ============================================================ */
+#bg-canvas { position: fixed; inset: 0; z-index: 0; }
+
+/* ============================================================
+   STAGE (portrait area)
+   ============================================================ */
+#stage {
+  position: fixed; inset: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: center;
+}
+
+#portrait-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 20px;
+}
+
+/* ============================================================
+   ASCII PORTRAIT
+   ============================================================ */
+#portrait {
+  font-size: 7.8px;
+  line-height: 1.18;
+  letter-spacing: 0.04em;
+  white-space: pre;
+  user-select: none;
+  text-shadow: 0 0 6px rgba(0,247,255,0.3);
+  transition: filter 0.08s;
+  will-change: contents;
+}
+
+/* ============================================================
+   IDENTITY BLOCK
+   ============================================================ */
+#identity {
+  text-align: center;
+  opacity: 0; transition: opacity 0.6s;
+}
+#identity.visible { opacity: 1; }
+#identity h1 {
+  font-size: 10px; letter-spacing: 0.45em;
+  color: var(--white); text-transform: uppercase; margin-bottom: 5px;
+}
+#identity p {
+  font-size: 7.5px; letter-spacing: 0.3em;
+  color: var(--cyan-40); text-transform: uppercase;
+}
+
+/* ============================================================
+   CASE STUDY NAV NODES
+   ============================================================ */
+#case-nav {
+  display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  max-width: 580px;
+  opacity: 0; transition: opacity 0.6s;
+}
+#case-nav.visible { opacity: 1; }
+
+.cs-node {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 8px 10px; cursor: pointer;
+  transition: transform 0.2s;
+}
+.cs-node:hover { transform: translateY(-3px); }
+.cs-node:hover .cs-id   { color: var(--magenta); text-shadow: 0 0 10px var(--magenta); }
+.cs-node:hover .cs-title { color: var(--magenta); }
+.cs-node:hover .cs-tag  { border-color: var(--magenta); color: var(--magenta); }
+
+.cs-id    { font-size: 8px; letter-spacing: 0.2em; color: var(--cyan);
+            text-shadow: 0 0 6px var(--cyan); transition: all 0.2s; }
+.cs-title { font-size: 7.5px; letter-spacing: 0.18em; color: var(--white);
+            text-transform: uppercase; transition: all 0.2s; }
+.cs-tag   { font-size: 6.5px; letter-spacing: 0.1em; color: rgba(122,0,255,0.8);
+            border: 1px solid rgba(122,0,255,0.35); padding: 2px 7px;
+            transition: all 0.2s; }
+
+/* ============================================================
+   INFO PANEL (right side)
+   ============================================================ */
+#info-panel {
+  position: fixed; right: 28px; top: 50%; transform: translateY(-50%);
+  z-index: 50; width: 150px;
+  opacity: 0; transition: opacity 1s;
+}
+#info-panel.visible { opacity: 1; }
+
+.info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 0; border-bottom: 1px solid rgba(0,247,255,0.07);
+}
+.info-key { font-size: 7px; letter-spacing: 0.2em; color: rgba(0,247,255,0.35); text-transform: uppercase; }
+.info-val { font-size: 7px; letter-spacing: 0.05em; color: var(--white); }
+.info-val.cyan { color: var(--cyan); }
+
+/* ============================================================
+   TOOLTIP
+   ============================================================ */
+#tooltip {
+  position: fixed; z-index: 200; pointer-events: none;
+  background: rgba(8,8,18,0.96);
+  border: 1px solid rgba(0,247,255,0.25);
+  padding: 12px 16px; max-width: 210px;
+  opacity: 0; transition: opacity 0.15s;
+}
+#tooltip.show { opacity: 1; }
+#tt-id    { font-size: 8px; letter-spacing: 0.3em; color: var(--cyan); margin-bottom: 5px; }
+#tt-title { font-size: 8px; color: var(--white); line-height: 1.6; letter-spacing: 0.04em; margin-bottom: 8px; }
+#tt-tags  { font-size: 7px; color: var(--magenta); letter-spacing: 0.12em; display: block; }
+
+/* ============================================================
+   BOOT SCREEN
+   ============================================================ */
+#boot {
+  position: fixed; inset: 0; z-index: 999;
+  background: var(--bg);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px;
+  transition: opacity 0.8s;
+}
+#boot.hidden { opacity: 0; pointer-events: none; }
+
+#boot-text {
+  font-size: 9px; letter-spacing: 0.4em; color: rgba(0,247,255,0.55);
+  text-transform: uppercase;
+}
+#boot-bar {
+  width: 180px; height: 1px; background: rgba(0,247,255,0.1); overflow: hidden;
+}
+#boot-progress {
+  height: 100%; width: 0; background: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan);
+  transition: width 1.6s linear;
+}
+#boot-sub {
+  font-size: 7px; letter-spacing: 0.3em; color: rgba(122,0,255,0.5);
+  text-transform: uppercase;
+}

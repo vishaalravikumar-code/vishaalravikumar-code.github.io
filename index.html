@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vishaal Ravikumar — Sr. Product Designer</title>
+  <link rel="stylesheet" href="css/main.css" />
+</head>
+<body>
+
+  <!-- Boot overlay -->
+  <div id="boot">
+    <div id="boot-text">INITIALIZING PORTFOLIO</div>
+    <div id="boot-bar"><div id="boot-progress"></div></div>
+    <div id="boot-sub">SR. PRODUCT DESIGNER // VISHAAL RAVIKUMAR</div>
+  </div>
+
+  <!-- CRT / scanline overlay -->
+  <div id="crt"></div>
+
+  <!-- Corner chrome -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- Top HUD -->
+  <header id="hud-top">
+    <div class="hud-left">
+      <span class="hud-label">SYS</span>
+      <span class="hud-val" id="hud-sys">ONLINE</span>
+      <span class="hud-sep">|</span>
+      <span class="hud-label">NODE</span>
+      <span class="hud-val">PORTFOLIO.V1</span>
+    </div>
+    <div class="hud-right">
+      <span class="hud-label">CURSOR</span>
+      <span class="hud-val" id="hud-cursor">0000, 0000</span>
+      <span class="hud-sep">|</span>
+      <span class="hud-val" id="hud-time">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- Bottom HUD -->
+  <footer id="hud-bottom">
+    <span class="hud-label">MOVE CURSOR TOWARD PORTRAIT TO EXPLORE</span>
+    <span class="hud-val" id="hud-mode">MODE: PORTRAIT</span>
+  </footer>
+
+  <!-- Canvas (city + particles + grid) -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Portrait -->
+  <main id="stage">
+    <div id="portrait-wrap">
+      <pre id="portrait" aria-label="Interactive ASCII portrait of Vishaal Ravikumar"></pre>
+      <div id="identity">
+        <h1>VISHAAL RAVIKUMAR</h1>
+        <p>SR. PRODUCT DESIGNER // ZILLOW</p>
+      </div>
+      <nav id="case-nav" aria-label="Case studies"></nav>
+    </div>
+  </main>
+
+  <!-- Side info panel -->
+  <aside id="info-panel">
+    <div class="info-row"><span class="info-key">STATUS</span><span class="info-val cyan">ACTIVE</span></div>
+    <div class="info-row"><span class="info-key">STUDIES</span><span class="info-val">05</span></div>
+    <div class="info-row"><span class="info-key">ROLE</span><span class="info-val">SR. DESIGNER</span></div>
+    <div class="info-row"><span class="info-key">CO.</span><span class="info-val">ZILLOW</span></div>
+    <div class="info-row"><span class="info-key">FOCUS</span><span class="info-val">UX / SYS</span></div>
+  </aside>
+
+  <!-- Tooltip -->
+  <div id="tooltip" role="tooltip" aria-hidden="true">
+    <h3 id="tt-id"></h3>
+    <p id="tt-title"></p>
+    <span id="tt-tags"></span>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/portrait.js"></script>
+  <script src="js/city.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
