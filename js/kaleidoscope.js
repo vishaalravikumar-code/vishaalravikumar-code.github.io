@@ -46,39 +46,32 @@ class Kaleidoscope {
 
   clearTrail() { this.trail = []; }
 
-  _field(nx, ny) {
+  _baseField(nx, ny) {
     const t  = this.t;
     const px = nx * 40;
-    const py = ny * 40 - this.t * 4; // drift upward over time
-
-    // Center of the field space
+    const py = ny * 40 - this.t * 4;
     const cx = 20, cy = 20;
     const dx = px - cx, dy = py - cy;
     const r  = Math.sqrt(dx * dx + dy * dy);
     const a  = Math.atan2(dy, dx);
-
-    let v = (
-      // Base waves — varied frequencies
+    return (
       Math.sin(px * 1.1  + t)          * Math.cos(py * 0.85 + t * 0.7)   +
       Math.sin(px * 0.5  + py * 0.6    + t * 1.15) * 0.9                 +
       Math.cos(px * 0.75 - py * 0.4    + t * 0.55) * 0.7                 +
       Math.sin(px * 0.25 + py * 0.95   + t * 0.9)  * 0.5                 +
-      // Cross-product term — creates sharp diagonal tendrils
       Math.sin(px * py * 0.08          + t * 0.6)  * 0.6                 +
-      // Radial waves — concentric rings expanding outward from center
       Math.sin(r  * 1.1  - t * 3.5)               * 0.7                 +
-      // Spiral arms — rotate outward over time
       Math.sin(a  * 3   + r * 0.6      - t * 2.0)  * 0.5                 +
-      // Fine detail layer — small, fast shapes
       Math.cos(px * 2.2 + py * 1.8     + t * 1.3)  * 0.35
     );
+  }
 
-    // Trail blobs
+  _field(nx, ny) {
+    let v = this._baseField(nx, ny);
     for (const p of this.trail) {
       const ddx = nx - p.nx, ddy = ny - p.ny;
       v += Math.exp(-(ddx * ddx + ddy * ddy) / 0.028) * 2.6 * p.strength;
     }
-
     return v;
   }
 
@@ -121,19 +114,14 @@ class Kaleidoscope {
         const nx = col / cols; // [0,1] within left half
         const ny = row / rows; // [0,1] full height
 
-        // Blob edge glitch — check each trail point's gaussian influence
-        let maxBlob = 0;
-        for (const p of this.trail) {
-          const ddx = nx - p.nx, ddy = ny - p.ny;
-          const blob = Math.exp(-(ddx * ddx + ddy * ddy) / 0.028) * p.strength;
-          if (blob > maxBlob) maxBlob = blob;
-        }
-
         const x1 = col * PIX;
         const y1 = row * PIX;
         const x2 = W - x1 - PIX;
 
-        const isEdge = maxBlob > 0.295 && maxBlob < 0.305 && Math.random() < 0.65;
+        const colorFull = this._color(this._field(nx, ny));
+        const isEdge = this.trail.length > 0 &&
+                       colorFull !== this._color(this._baseField(nx, ny)) &&
+                       Math.random() < 0.7;
 
         if (isEdge) {
           ctx.fillStyle = '#FF0077';
@@ -141,7 +129,7 @@ class Kaleidoscope {
           ctx.fillStyle = '#0047FF';
           ctx.fillRect(x2, y1, PIX, PIX); // right — electric blue
         } else {
-          ctx.fillStyle = this._color(this._field(nx, ny));
+          ctx.fillStyle = colorFull;
           ctx.fillRect(x1, y1, PIX, PIX);
           ctx.fillRect(x2, y1, PIX, PIX);
         }
