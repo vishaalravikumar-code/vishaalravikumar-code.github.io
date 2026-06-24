@@ -210,7 +210,7 @@ class Kaleidoscope {
         ctx.fillText(ch, charX, cy);
       }
 
-      charX += charW;
+      charX += charW + 2;
     }
 
     ctx.textAlign = 'center';
