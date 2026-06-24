@@ -109,6 +109,9 @@ class Kaleidoscope {
     const cols  = Math.ceil(halfW / PIX);
     const rows  = Math.ceil(H / PIX);
 
+    const cr = Math.min(W, H) * 0.22;
+    const cx = W / 2, cy = H / 2;
+
     for (let row = 0; row < rows; row++) {
       for (let col = 0; col < cols; col++) {
         const nx = col / cols; // [0,1] within left half
@@ -117,6 +120,19 @@ class Kaleidoscope {
         const x1 = col * PIX;
         const y1 = row * PIX;
         const x2 = W - x1 - PIX;
+
+        // Pixel centers (left and right are equidistant from cx due to symmetry)
+        const pcx = x1 + PIX / 2;
+        const pcy = y1 + PIX / 2;
+        const distFromCenter = Math.hypot(pcx - cx, pcy - cy);
+
+        if (distFromCenter <= cr) {
+          // Inside circle — fill black, pattern stops here
+          ctx.fillStyle = '#000000';
+          ctx.fillRect(x1, y1, PIX, PIX);
+          ctx.fillRect(x2, y1, PIX, PIX);
+          continue;
+        }
 
         const colorFull = this._color(this._field(nx, ny));
         let maxBlob = 0;
@@ -144,9 +160,7 @@ class Kaleidoscope {
       }
     }
 
-    // Black circle at center with name + title
-    const cr = Math.min(W, H) * 0.22;
-    const cx = W / 2, cy = H / 2;
+    // Black circle drawn on top to smooth pixel-jagged edges
     ctx.beginPath();
     ctx.arc(cx, cy, cr, 0, Math.PI * 2);
     ctx.fillStyle = '#000000';
