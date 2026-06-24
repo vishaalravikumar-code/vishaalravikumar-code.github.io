@@ -63,6 +63,8 @@ html, body {
   transform: translate(-50%, -50%);
   width: 75vw; height: 75vh;
   z-index: 0;
+  border-radius: 24px;
+  overflow: hidden;
 }
 
 /* ============================================================
