@@ -155,7 +155,7 @@ class Kaleidoscope {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillStyle = '#ffffff';
-    ctx.font = '300 24px "Noto Serif"';
+    ctx.font = '300 24px "Open Sans"';
     ctx.fillText('Vishaal Ravikumar', cx, cy);
     ctx.font = '400 14px "Noto Serif"';
     ctx.fillStyle = 'rgba(255,255,255,0.55)';
