@@ -34,12 +34,9 @@ html, body {
   gap: 6px;
   pointer-events: none;
 }
-#site-name {
-  font-family: 'Jersey 10', sans-serif;
-  font-size: 36px;
-  color: #ffffff;
-  letter-spacing: 0.04em;
-  line-height: 1;
+#name-canvas {
+  display: block;
+  max-width: 100%;
 }
 #site-role {
   font-family: 'Open Sans', sans-serif;
@@ -47,6 +44,11 @@ html, body {
   color: rgba(255,255,255,0.55);
   letter-spacing: 0.08em;
   font-weight: 400;
+  animation: subtitlePulse 5s ease-in-out infinite;
+}
+@keyframes subtitlePulse {
+  0%, 100% { opacity: 0.45; }
+  50%       { opacity: 0.75; }
 }
 
 /* ============================================================

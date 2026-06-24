@@ -6,7 +6,7 @@ let mx = window.innerWidth  / 2;
 let my = window.innerHeight / 2;
 let prevMx = mx, prevMy = my;
 let mouseSpeed = 0;
-let kaleido, synth;
+let kaleido, synth, nameEffect;
 
 // ── Boot ─────────────────────────────────────────────────────
 function boot() {
@@ -99,6 +99,7 @@ window.addEventListener('resize', () => kaleido.resize());
 // ── Render loop ──────────────────────────────────────────────
 function loop() {
   kaleido.draw();
+  nameEffect.draw();
   updateHUD();
   requestAnimationFrame(loop);
 }
@@ -108,7 +109,8 @@ synth = new AmbientSynth();
 document.addEventListener('click', () => synth.start(), { once: true });
 
 // ── Init ─────────────────────────────────────────────────────
-kaleido = new Kaleidoscope(document.getElementById('kaleido-canvas'));
+kaleido     = new Kaleidoscope(document.getElementById('kaleido-canvas'));
+nameEffect  = new NameEffect(document.getElementById('name-canvas'), document.getElementById('kaleido-canvas'));
 kaleido.setMouse(mx, my);
 buildNav();
 boot();
