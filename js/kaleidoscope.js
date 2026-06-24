@@ -49,7 +49,7 @@ class Kaleidoscope {
   _field(nx, ny) {
     const t  = this.t;
     const px = nx * 40;
-    const py = ny * 40;
+    const py = ny * 40 - this.t * 4; // drift upward over time
 
     // Center of the field space
     const cx = 20, cy = 20;
