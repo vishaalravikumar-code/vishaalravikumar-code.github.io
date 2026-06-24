@@ -13,7 +13,7 @@ const PALETTE = [
   '#FFE000', // yellow
 ];
 
-const PIX = 10; // block size in px
+const PIX = 5; // block size in px
 
 class Kaleidoscope {
   constructor(canvas) {
