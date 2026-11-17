@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css?v=b29a9c7b">
 </head>
 <body class="locked">
 <style>
@@ -18,13 +18,13 @@ body.locked .shell{display:none}
 .gate .err{color:var(--bad);min-height:20px;margin:8px 0 0;text-align:center;font-size:13px}
 </style>
 <div class="gate" id="gate"><form class="card box" id="gf">
-<div class="brandbar"><img src="logo.png" alt="Audio Crest Chennai"></div>
+<div class="brandbar"><img src="logo.png?v=b29a9c7b" alt="Audio Crest Chennai"></div>
 <h1>Sign in</h1><p>Enter the password to continue</p>
 <input id="gp" type="password" placeholder="Password" autocomplete="current-password" autofocus required>
 <button class="btn primary" style="width:100%;margin-top:14px;padding:10px">Continue</button><div class="err" id="ge"></div></form></div>
 <div class="shell">
   <aside class="side">
-    <div class="brandbar"><img src="logo.png" alt="Audio Crest Chennai"></div>
+    <div class="brandbar"><img src="logo.png?v=b29a9c7b" alt="Audio Crest Chennai"></div>
     <button class="menu-btn" id="menuBtn" aria-label="Menu" aria-expanded="false">☰ Menu</button>
     <nav id="nav">
       <button data-view="dashboard"><i>▦</i>Dashboard</button>
@@ -51,7 +51,7 @@ const HASH = '5994471abb01112afcc18159f6cc74b4f511b99806da59b3caf5a9c173cacfc5';
 const sha = async s => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, '0')).join('');
 const start = async () => {
   document.body.classList.remove('locked'); document.getElementById('gate')?.remove();
-  try { await (await import('./static-app.js')).boot(); } catch (e) { document.body.insertAdjacentHTML('afterbegin', '<pre style="padding:20px;color:#c4302b">Could not start: ' + e.message + '</pre>'); console.error(e); }
+  try { await (await import('./static-app.js?v=b29a9c7b')).boot(); } catch (e) { document.body.insertAdjacentHTML('afterbegin', '<pre style="padding:20px;color:#c4302b">Could not start: ' + e.message + '</pre>'); console.error(e); }
 };
 let ok = false; try { ok = sessionStorage.getItem('ac_ok') === '1'; } catch {}
 if (ok) start(); else document.getElementById('gf').onsubmit = async e => {

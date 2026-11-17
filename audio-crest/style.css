@@ -135,6 +135,7 @@ label.chk input{width:auto}
   .top h1{font-size:21px}.top p{display:none}
   main{padding:12px 14px 40px}
   .g4{grid-template-columns:1fr 1fr;gap:10px}.g2{grid-template-columns:1fr}
+  .g4>.card:last-child:nth-child(odd){grid-column:1/-1}
   .stat{flex-direction:column;align-items:flex-start;gap:8px;padding:14px}
   .stat .ic{width:34px;height:34px;font-size:15px;border-radius:10px}
   .stat .v{font-size:19px}.stat .l{font-size:12px}
