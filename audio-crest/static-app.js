@@ -1,6 +1,6 @@
 // Browser-only runtime: runs the same core.js as the Node server, with SQLite (sql.js / WebAssembly)
 // persisted in this browser's localStorage, and a tiny router standing in for Express.
-import { createCore } from './core.js?v=b29a9c7b';
+import { createCore } from './core.js?v=ad0a4f06';
 
 const LS_DB = 'ac_db_v1', LS_CFG = 'ac_cfg_v1';
 const toB64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode(...u8.subarray(i, i + 0x8000)); return btoa(s); };
@@ -61,7 +61,7 @@ export async function boot() {
     return { ok: r.status < 400, status: r.status, json: async () => r.body };
   };
 
-  await loadScript('app.js?v=b29a9c7b');
+  await loadScript('app.js?v=ad0a4f06');
   core.schedulerTick(); setInterval(core.schedulerTick, 30 * 60 * 1000);
 
   // ---- Settings & backup (injected into the sidebar) ----

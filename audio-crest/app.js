@@ -30,11 +30,11 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') { if (!$('#m
 async function render() {
   document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
   const main = $('#main');
-  const T = { dashboard: ['Dashboard', 'Where your money and leads stand today'], pipeline: ['Pipeline', 'Every client from first enquiry to final payment'], clients: ['Clients', 'Everyone you have quoted or sold to'], payments: ['Payments', 'Instalments due, paid and overdue'], stock: ['Stock', 'What you hold, what has gone out and what is still to be delivered'], catalog: ['Catalog', 'Brands, models and services you can add to quotations'], emails: ['Emails', 'Quotations, reminders and follow-ups'] }[view];
+  const T = { dashboard: ['Dashboard', 'Where your money and leads stand today'], pipeline: ['Pipeline', 'Every client from first enquiry to final payment'], clients: ['Clients', 'Everyone you have quoted or sold to'], payments: ['Payments', 'Instalments due, paid and overdue'], stock: ['Stock', 'What you hold, what has gone out and what is still to be delivered'], catalog: ['Catalog', 'Brands, models and services you can add to quotations'], emails: ['Emails', 'Quotations, reminders and follow-ups'], import: ['Import from Tally', 'Bring customers, stock and outstanding dues in from Tally'] }[view];
   $('#title').textContent = T[0]; $('#sub').textContent = T[1];
   main.classList.toggle('wide', view === 'pipeline');
   const seq = ++renderSeq, v = view;   // ignore stale results if the user switched pages while this one was loading
-  const views = { dashboard: vDashboard, pipeline: vPipeline, clients: vClients, payments: vPayments, emails: vEmails, catalog: vCatalog, stock: vStock };
+  const views = { dashboard: vDashboard, pipeline: vPipeline, clients: vClients, payments: vPayments, emails: vEmails, catalog: vCatalog, stock: vStock, import: vImport };
   const html = await views[v]();
   if (seq !== renderSeq) return;
   main.innerHTML = html;
@@ -188,6 +188,75 @@ function deliverForm(id) {
   };
 }
 
+// ---------- import from Tally ----------
+let tallyFile = null;
+function vImport() {
+  tallyFile = null;
+  return `<div class="card"><h3>Import from Tally</h3>
+    <p class="mute" style="margin-top:-4px">Bring customers, stock and outstanding dues from Tally into this system. You see a preview first, and nothing is saved until you click Import. Importing the same file again will not create duplicates.</p>
+    <details class="how"><summary>How to export from Tally</summary><ol>
+      <li><b>Customers and stock:</b> Gateway of Tally → Export → Masters, choose format <b>XML</b>, and select Ledgers and Stock Items (or All Masters).</li>
+      <li><b>Money customers still owe:</b> Display More Reports → Statements of Accounts → Outstandings → Receivables, then Export (Alt+E) as <b>CSV</b>.</li>
+      <li><b>Stock quantities:</b> Stock Summary report → Export as CSV, or use the Masters XML above.</li>
+      <li>Menu names differ a little between TallyPrime and Tally.ERP 9. Excel files: open them and Save As CSV first.</li></ol></details>
+    <div class="f">
+      <div class="full"><label>Tally file (.xml or .csv)</label><input type="file" id="tallyFile" accept=".xml,.csv,.txt,.tsv"></div>
+      <div class="full mute" id="tallyInfo"></div>
+      <div><label>What is in the file?</label><select id="tKind"><option value="auto">Detect automatically</option><option value="customers">Customers (ledgers)</option><option value="bills">Outstanding receivables (bills)</option><option value="stock">Stock items</option></select></div>
+      <div><label>Stage for new customers</label><select id="tStage">${CFG.stages.map(s => `<option value="${s}" ${s === 'completed' ? 'selected' : ''}>${esc(STAGE_LABEL[s])}</option>`).join('')}</select></div>
+      <div class="full checks">
+        <label class="chk"><input type="checkbox" id="tBalance"None> <span>Add each customer's Tally balance as a pending payment <span class="mute">(masters hold the opening balance, not today's dues. Don't use this together with a dues file for the same customers)</span></span></label>
+        <label class="chk"><input type="checkbox" id="tMissing" checked> <span>Create customers that appear in a dues file but are not in the system yet</span></label>
+        <label class="chk"><input type="checkbox" id="tStock" checked> <span>Set stock on hand to match Tally quantities</span></label>
+        <label class="chk"><input type="checkbox" id="tRate"None> <span>Use the Tally stock rate as the catalog price <span class="mute">(Tally rates are usually cost price)</span></span></label>
+        <label class="chk"><input type="checkbox" id="tAll"None> <span>Import all ledgers, not only Sundry Debtors</span></label></div>
+      <div class="full actions"><button class="btn primary" id="tPreview" data-act="tally-preview" disabled>Preview</button></div></div></div>
+    <div id="tallyResult" style="margin-top:16px"></div>`;
+}
+function decodeBytes(u8) {
+  const dec = (enc, o) => new TextDecoder(enc, o).decode(u8);
+  if (u8[0] === 0xFF && u8[1] === 0xFE) return dec('utf-16le');
+  if (u8[0] === 0xFE && u8[1] === 0xFF) return dec('utf-16be');
+  if (u8.length > 3 && u8[1] === 0 && u8[3] === 0 && u8[0] !== 0) return dec('utf-16le');   // Tally often writes UTF-16 without a BOM
+  try { return dec('utf-8', { fatal: true }); } catch { return dec('windows-1252'); }
+}
+async function loadTallyFile(f) {
+  tallyFile = null; $('#tallyResult').innerHTML = ''; $('#tPreview').disabled = true;
+  if (!f) { $('#tallyInfo').textContent = ''; return; }
+  if (f.size > 25 * 1024 * 1024) { toast('That file is over 25 MB. Export a smaller date range or fewer masters.', true); return; }
+  const text = decodeBytes(new Uint8Array(await f.arrayBuffer()));
+  tallyFile = { name: f.name, text };
+  $('#tallyInfo').textContent = `${f.name} · ${Math.max(1, Math.round(f.size / 1024))} KB loaded`;
+  $('#tPreview').disabled = false;
+}
+async function runTally(dryRun) {
+  if (!tallyFile) return toast('Choose a Tally file first', true);
+  const options = { stage: $('#tStage').value, createBalance: $('#tBalance').checked, createMissing: $('#tMissing').checked, addStock: $('#tStock').checked, useRate: $('#tRate').checked, allLedgers: $('#tAll').checked };
+  const r = await api('/import/tally', 'POST', { filename: tallyFile.name, content: tallyFile.text, kind: $('#tKind').value, options, dryRun });
+  renderTally(r);
+  if (!dryRun) toast('Import complete');
+}
+function renderTally(r) {
+  const KIND = { customers: 'Customers', bills: 'Outstanding bills', stock: 'Stock items' };
+  const ACT = { create: ['New', 'paid'], update: ['Update', 'partial'], exists: ['Already there', ''], skip: ['Skipped', 'overdue'] };
+  let todo = 0;
+  const parts = r.parts.map(p => {
+    const c = p.counts; todo += c.create + c.update;
+    return `<div class="card" style="margin-bottom:14px"><h3>${KIND[p.kind]} · ${p.total} found</h3>
+      <div class="sumline">${c.create} ${r.dryRun ? 'will be added' : 'added'} · ${c.update} ${r.dryRun ? 'will be updated' : 'updated'} · ${c.exists} already in the system · ${c.skip} skipped</div>
+      <table><tr><th>Name</th><th>Result</th><th>Details</th></tr>${p.rows.map(x => `<tr><td>${esc(x.name)}</td><td><span class="tag ${ACT[x.action][1]}">${ACT[x.action][0]}</span></td><td class="mute">${esc(x.detail)}</td></tr>`).join('')}</table>
+      ${p.total > p.rows.length ? `<p class="hint">Showing the first ${p.rows.length} of ${p.total}.</p>` : ''}</div>`;
+  }).join('');
+  const warn = r.warnings.length ? `<div class="note">${r.warnings.map(esc).join('<br>')}</div>` : '';
+  const link = (v, t) => `<a href="#" data-view="${v}" style="color:inherit;text-decoration:underline">${t}</a>`;
+  const done = !r.dryRun && r.parts.length ? `<div class="okbox">Imported. Review the results in ${link('clients', 'Clients')}, ${link('payments', 'Payments')} and ${link('stock', 'Stock')}.</div>` : '';
+  const foot = !r.parts.length || !r.dryRun ? ''
+    : todo ? `<div class="actions" style="justify-content:flex-start"><button class="btn primary" data-act="tally-commit">Import ${todo} record${todo === 1 ? '' : 's'} now</button><span class="mute">Nothing has been saved yet.</span></div>`
+    : '<p class="mute">Nothing to import: everything in this file is already in the system.</p>';
+  $('#tallyResult').innerHTML = done + warn + parts + foot;
+  $('#tPreview').disabled = false;
+}
+
 async function vEmails() {
   const es = await api('/emails');
   return `${CFG.smtp ? '' : `<div class="note">${CFG.static ? 'This browser-only version cannot send email. Messages are written here so you can preview and copy them.' : 'Dry-run mode: emails are generated and logged here but not delivered. Add SMTP details to <code>.env</code> to send for real.'}</div>`}
@@ -322,6 +391,8 @@ document.addEventListener('click', async e => {
       case 'remind': { const r = await api(`/payments/${id}/remind`, 'POST'); toast(r.status === 'sent' ? 'Reminder emailed' : 'Dry-run: logged, not delivered'); return refresh(); }
       case 'add-payment': return addPaymentForm();
       case 'ask-review': { const r = await api(`/clients/${openClient}/review`, 'POST'); toast(r.status === 'sent' ? 'Review request emailed' : 'Dry-run: logged, not delivered'); return refresh(); }
+      case 'tally-preview': return runTally(true);
+      case 'tally-commit': if (confirm('Import this data into the system now?')) await runTally(false); return;
       case 'receive': return receiveForm(d.name || '');
       case 'deliver': return deliverForm(id);
       case 'del-order': if (confirm('Remove this equipment line from the order? Any deliveries logged against it are removed too.')) { await api('/deliveries/' + id, 'DELETE'); refresh(); } return;
@@ -336,6 +407,7 @@ document.addEventListener('click', async e => {
 });
 function closeDrawerSilent() { $('#drawer').hidden = true; openClient = null; }
 document.addEventListener('change', async e => {
+  if (e.target.id === 'tallyFile') return loadTallyFile(e.target.files[0]);
   if (e.target.dataset.pid) { await api('/products/' + e.target.dataset.pid, 'PUT', { price: e.target.value || 0 }); toast('Price saved'); }
   if (e.target.id === 'pcat') { catCat = e.target.value; render(); }
   if (e.target.id === 'showAll') { stockAll = e.target.checked; render(); }

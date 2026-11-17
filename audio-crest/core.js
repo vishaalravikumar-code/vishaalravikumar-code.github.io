@@ -1,5 +1,7 @@
 // Shared application logic. Runs unchanged in Node (server.js) and in the browser (static build).
 // db: { exec, prepare(sql) -> { all, get, run } }   app: { get, post, put, delete }   transport: nodemailer-like or null
+import { parseTally } from './tally.js?v=ad0a4f06';
+
 export function createCore({ db, CFG, transport, app }) {
 db.exec(`
 PRAGMA foreign_keys = ON;
@@ -489,6 +491,97 @@ app.post('/api/deliveries/:id/deliver', (req, res) => {
   let moved = false;
   if (!left && o.client_stage === 'won') { run("UPDATE clients SET stage='installation', stage_changed_at=datetime('now') WHERE id=?", o.client_id); moved = true; }
   res.json({ ok: true, onHand: onHand(o.product_id), movedToInstallation: moved });
+});
+
+
+// ---- import from Tally ----
+const findClientByName = name => q1('SELECT * FROM clients WHERE lower(trim(name))=lower(trim(?))', name);
+function upsertTallyPayment(clientId, label, amount, due, write) {
+  const ex = clientId ? q1('SELECT * FROM payments WHERE client_id=? AND label=?', clientId, label) : null;
+  if (!ex) { if (write) run('INSERT INTO payments(client_id,label,amount,due_date) VALUES(?,?,?,?)', clientId, label, amount, clean(due)); return 'create'; }
+  if (ex.paid_amount < ex.amount - 0.005 && Math.abs(ex.amount - amount) > 0.005) {
+    if (write) run('UPDATE payments SET amount=?, due_date=COALESCE(?, due_date) WHERE id=?', Math.max(amount, ex.paid_amount), clean(due), ex.id);
+    return 'update';
+  }
+  return 'exists';
+}
+function applyTallyPart(part, opts, write) {
+  const stage = STAGES.includes(opts.stage) ? opts.stage : 'completed';
+  const rows = [], counts = { create: 0, update: 0, exists: 0, skip: 0 };
+  const add = (action, name, detail) => { counts[action]++; if (rows.length < 400) rows.push({ action, name, detail }); };
+
+  if (part.kind === 'customers') {
+    for (const r of part.records) {
+      const ex = findClientByName(r.name);
+      let id = ex?.id, action, detail = [];
+      if (!ex) {
+        action = 'create';
+        if (write) id = Number(run('INSERT INTO clients(name,phone,email,address,source,stage,notes) VALUES(?,?,?,?,?,?,?)', r.name, clean(r.phone), clean(r.email), clean(r.address), 'Tally', stage, 'Imported from Tally' + (r.gstin ? ' · GSTIN ' + r.gstin : '')).lastInsertRowid);
+      } else {
+        const fill = ['phone', 'email', 'address'].filter(k => !ex[k] && r[k]);
+        action = fill.length ? 'update' : 'exists';
+        if (fill.length) { detail.push('fills ' + fill.join(', ')); if (write) run(`UPDATE clients SET ${fill.map(k => k + '=?').join(',')} WHERE id=?`, ...fill.map(k => r[k]), ex.id); }
+      }
+      if (r.balance > 0.005) {
+        detail.push('owes ' + inr(r.balance));
+        if (opts.createBalance) { const pa = upsertTallyPayment(id, 'Outstanding balance (Tally)', r.balance, null, write); detail.push(pa === 'exists' ? 'payment already recorded' : `payment ${pa === 'create' ? 'added' : 'updated'}`); }
+      } else if (r.balance < -0.005) detail.push('advance ' + inr(-r.balance) + ' (not imported)');
+      add(action, r.name, detail.join(' · '));
+    }
+  } else if (part.kind === 'bills') {
+    for (const b of part.records) {
+      let c = findClientByName(b.party), detail = [inr(b.amount) + (b.due ? ' due ' + b.due : '')], created = false;
+      if (!c) {
+        if (opts.createMissing === false) { add('skip', b.party, 'client not found in this system'); continue; }
+        created = true;
+        if (write) { const id = Number(run('INSERT INTO clients(name,source,stage,notes) VALUES(?,?,?,?)', b.party, 'Tally', stage, 'Imported from Tally').lastInsertRowid); c = { id }; }
+      }
+      const label = `Tally bill ${b.ref || b.date || 'outstanding'}`;
+      const pa = upsertTallyPayment(c?.id, label, b.amount, b.due || b.date, write);
+      if (created) detail.push('new client');
+      add(pa, `${b.party} · ${b.ref || b.date || ''}`.trim(), detail.join(' · '));
+    }
+  } else if (part.kind === 'stock') {
+    for (const r of part.records) {
+      let p = q1("SELECT id, category, price FROM products WHERE lower(trim(COALESCE(brand,'')||' '||name)) = lower(?)", r.name), action, detail = [];
+      if (p && SERVICE_CATS.includes(p.category)) { add('skip', r.name, 'is a service, not stock'); continue; }
+      if (!p) {
+        action = 'create'; detail.push('new catalog item');
+        const price = opts.useRate && r.rate > 0 ? r.rate : 0;
+        if (write) p = { id: Number(run('INSERT INTO products(category,brand,name,price) VALUES(?,?,?,?)', r.group || 'Tally import', null, r.name, price).lastInsertRowid), price };
+      } else {
+        action = 'exists';
+        if (opts.useRate && r.rate > 0 && !p.price) { action = 'update'; detail.push('sets price ' + inr(r.rate)); if (write) run('UPDATE products SET price=? WHERE id=?', r.rate, p.id); }
+      }
+      if (opts.addStock !== false && r.qty > 0) {
+        const have = p ? onHand(p.id) : 0, delta = +(r.qty - have).toFixed(3);
+        if (delta > 0) {
+          detail.push(`Tally ${r.qty}${r.unit ? ' ' + r.unit : ''}, here ${have} → add ${delta} to stock`);
+          if (action === 'exists') action = 'update';
+          if (write) run('INSERT INTO stock_receipts(product_id,qty,date,supplier,note) VALUES(?,?,?,?,?)', p.id, delta, today(), 'Tally import', `Reconciled to Tally quantity ${r.qty}`);
+        } else detail.push(delta === 0 ? `stock already matches Tally (${r.qty})` : `system holds ${have}, more than Tally's ${r.qty}: left unchanged`);
+      }
+      add(action, r.name, detail.join(' · '));
+    }
+  }
+  return { kind: part.kind, counts, total: part.records.length, rows };
+}
+app.post('/api/import/tally', (req, res) => {
+  const b = req.body || {}, opts = b.options || {};
+  if (!b.content || typeof b.content !== 'string') return res.status(400).json({ error: 'No file content received' });
+  let parsed;
+  try { parsed = parseTally(b.content, b.filename || '', b.kind || 'auto', opts); }
+  catch (e) { return res.status(400).json({ error: e.message }); }
+  const write = !b.dryRun;
+  try {
+    if (write) db.exec('BEGIN');
+    const parts = parsed.parts.map(p => applyTallyPart(p, opts, write));
+    if (write) db.exec('COMMIT');
+    res.json({ format: parsed.format, warnings: parsed.warnings, parts, dryRun: !write });
+  } catch (e) {
+    if (write) { try { db.exec('ROLLBACK'); } catch {} }
+    res.status(500).json({ error: 'Import failed and nothing was changed: ' + e.message });
+  }
 });
 
 // emails + automation
