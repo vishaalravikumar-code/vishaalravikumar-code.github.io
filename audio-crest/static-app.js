@@ -68,7 +68,7 @@ export async function boot() {
   const foot = document.querySelector('.side-foot');
   if (foot) {
     foot.append(el('<div style="margin-top:6px"><a href="#" id="settings" style="color:var(--mute)">Settings &amp; backup</a></div>'));
-    document.getElementById('settings').onclick = e => { e.preventDefault(); openSettings(); };
+    document.getElementById('settings').onclick = e => { e.preventDefault(); document.querySelector('.side')?.classList.remove('open'); openSettings(); };
   }
   function openSettings() {
     const f = (k, l, ph = '') => `<div class="full"><label>${l}</label><input name="${k}" value="${esc(CFG[k])}" placeholder="${esc(ph)}"></div>`;

@@ -92,7 +92,6 @@ iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;b
 .empty{color:var(--mute);padding:22px;text-align:center}
 .note{background:var(--warn-bg);color:var(--warn);padding:10px 14px;border-radius:10px;margin-bottom:14px;font-size:13px}
 code{background:var(--soft);padding:1px 6px;border-radius:5px}
-@media(max-width:860px){.shell{grid-template-columns:1fr}.side{position:static;height:auto;flex-direction:row;align-items:center;padding:10px;overflow-x:auto;gap:8px}.brand{padding:0 8px 0 0}.brand small,.side-foot{display:none}nav{flex-direction:row}nav button{white-space:nowrap}.top,main{padding-left:16px;padding-right:16px}.f,.g2{grid-template-columns:1fr}}
 
 .cb{position:relative;flex:3}
 .dd{position:absolute;left:0;right:0;top:100%;margin-top:4px;z-index:60;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 14px 36px #1018282e;max-height:300px;overflow:auto}
@@ -118,4 +117,60 @@ label.chk input{width:auto}
 
 .brandbar{background:var(--ink);border-radius:12px;padding:16px 14px 14px;margin:0 0 18px;display:flex;justify-content:center}
 .brandbar img{width:100%;max-width:240px;height:auto;display:block}
-@media(max-width:860px){.side .brandbar{width:150px;flex:none;padding:9px 12px;margin:0 8px 0 0}}
+
+.menu-btn{display:none}
+/* ---------- mobile ---------- */
+@media(max-width:860px){
+  .shell{display:block}
+  .side{position:sticky;top:0;z-index:25;height:auto;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:space-between;padding:8px 12px;border-right:0;border-bottom:1px solid var(--line);overflow:visible}
+  .side .brandbar{width:150px;flex:none;padding:9px 12px;margin:0}
+  .menu-btn{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:var(--panel);font:600 14px Inter,sans-serif;color:var(--text);cursor:pointer}
+  .side nav{display:none;width:100%;flex-direction:column;padding:10px 0 4px;gap:2px}
+  .side.open nav{display:flex}
+  nav button{min-height:46px;font-size:15px}
+  .side-foot{display:none;width:100%;margin:0;padding:6px 10px 10px}
+  .side.open .side-foot{display:block}
+  .side-foot a{display:inline-block;padding:8px 0;font-size:14px}
+  .top{padding:16px 14px 4px;gap:10px}
+  .top h1{font-size:21px}.top p{display:none}
+  main{padding:12px 14px 40px}
+  .g4{grid-template-columns:1fr 1fr;gap:10px}.g2{grid-template-columns:1fr}
+  .stat{flex-direction:column;align-items:flex-start;gap:8px;padding:14px}
+  .stat .ic{width:34px;height:34px;font-size:15px;border-radius:10px}
+  .stat .v{font-size:19px}.stat .l{font-size:12px}
+  .card{padding:14px}
+  .toolbar input{max-width:none;width:100%}
+  .chips{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.chips button{flex:none}
+  .board{grid-template-columns:1fr 1fr;gap:10px}
+  .col{padding:8px}.kc{padding:10px}
+  .drawer{width:100%;padding:16px 14px;z-index:28}
+  .modal{padding:2vh 8px}.sheet{padding:18px 16px;border-radius:16px}
+  .f{grid-template-columns:1fr}
+  input,select,textarea{font-size:16px}
+  .btn{min-height:38px}.btn.sm{min-height:34px;padding:4px 12px}
+  .actions{flex-wrap:wrap}.actions .btn{flex:1}
+  .totals{width:100%}
+  .dateinp{width:100%;max-width:170px}.pinput{width:110px}
+  #lines .row{flex-wrap:wrap}#lines .cb{flex:1 1 100%}
+  #sch .row{flex-wrap:wrap}#sch .row input[data-k=label]{flex:1 1 100%}
+  .toast{width:calc(100% - 28px);text-align:center}
+  .bar .n{width:92px}
+  iframe{height:340px}
+
+  /* tables become stacked cards */
+  table.stack,.stack tbody{display:block;width:100%}
+  .stack tr.hr{display:none}
+  .stack tr{display:block;padding:10px 2px;border-bottom:1px solid var(--line)}
+  .stack tr:last-child{border-bottom:0}
+  .stack td{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:3px 4px;border:0;text-align:right}
+  .stack td::before{content:attr(data-label);color:var(--mute);font-size:12px;text-align:left;flex:none}
+  .stack td[data-label=""]::before,.stack td:first-child::before{display:none}
+  .stack td:first-child{justify-content:flex-start;font-size:15px;padding-bottom:5px}
+  .stack td:last-child:has(button){justify-content:flex-end;flex-wrap:wrap;padding-top:6px}
+  .stack tr.click:hover td{background:none}
+  .stack.nohead tr{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+  .stack.nohead td{display:block;padding:2px 0;text-align:left}
+  .stack.nohead td:first-child{flex:1 1 55%}
+  .stack.nohead td.r{text-align:right}
+  .stack.nohead td:last-child{flex:1 1 100%;text-align:right}
+}

@@ -33,15 +33,14 @@ async function render() {
   const T = { dashboard: ['Dashboard', 'Where your money and leads stand today'], pipeline: ['Pipeline', 'Every client from first enquiry to final payment'], clients: ['Clients', 'Everyone you have quoted or sold to'], payments: ['Payments', 'Instalments due, paid and overdue'], stock: ['Stock', 'What you hold, what has gone out and what is still to be delivered'], catalog: ['Catalog', 'Brands, models and services you can add to quotations'], emails: ['Emails', 'Quotations, reminders and follow-ups'] }[view];
   $('#title').textContent = T[0]; $('#sub').textContent = T[1];
   main.classList.toggle('wide', view === 'pipeline');
-  if (view === 'dashboard') main.innerHTML = await vDashboard();
-  else if (view === 'pipeline') main.innerHTML = await vPipeline();
-  else if (view === 'clients') main.innerHTML = await vClients();
-  else if (view === 'payments') main.innerHTML = await vPayments();
-  else if (view === 'emails') main.innerHTML = await vEmails();
-  else if (view === 'catalog') main.innerHTML = await vCatalog();
-  else if (view === 'stock') main.innerHTML = await vStock();
-  if (view === 'pipeline') wireDnD();
+  const seq = ++renderSeq, v = view;   // ignore stale results if the user switched pages while this one was loading
+  const views = { dashboard: vDashboard, pipeline: vPipeline, clients: vClients, payments: vPayments, emails: vEmails, catalog: vCatalog, stock: vStock };
+  const html = await views[v]();
+  if (seq !== renderSeq) return;
+  main.innerHTML = html;
+  if (v === 'pipeline') wireDnD();
 }
+let renderSeq = 0;
 
 async function vDashboard() {
   const d = await api('/dashboard');
@@ -300,9 +299,10 @@ async function showEmail(id) {
 // ---------- events ----------
 document.addEventListener('click', async e => {
   const t = e.target.closest('button,[data-open],[data-email],a'); if (!t) return;
+  if (t.id === 'menuBtn') { const s = $('.side'); const o = s.classList.toggle('open'); t.setAttribute('aria-expanded', o); return; }
   if (t.tagName === 'A') e.preventDefault();
   const d = t.dataset, id = +d.id;
-  if (d.view) { view = d.view; closeDrawerSilent(); return render(); }
+  if (d.view) { view = d.view; closeDrawerSilent(); $('.side').classList.remove('open'); window.scrollTo(0, 0); return render(); }
   if (d.filter) { payFilter = d.filter; return render(); }
   if (d.dfilter) { delFilter = d.dfilter; return render(); }
   if (d.email) return showEmail(d.email);
@@ -348,3 +348,17 @@ document.addEventListener('input', e => {
   CFG = await api('/config'); render();
   if (CFG.auth) { const l = $('#logout'); l.hidden = false; l.onclick = async e => { e.preventDefault(); await (window.localFetch || fetch)('/api/logout', { method: 'POST' }); if (!window.localFetch) location.href = '/login'; }; }
 })();
+
+// Label every table cell with its column header so tables can turn into stacked cards on phones (CSS only applies on small screens).
+function stackTables() {
+  document.querySelectorAll('table:not([data-stacked])').forEach(t => {
+    t.dataset.stacked = '1'; t.classList.add('stack');
+    const head = [...t.querySelectorAll('th')].map(th => th.textContent.trim());
+    if (!head.length) t.classList.add('nohead');
+    t.querySelectorAll('tr').forEach(tr => {
+      if (tr.querySelector('th')) { tr.classList.add('hr'); return; }
+      [...tr.children].forEach((td, i) => { td.dataset.label = head[i] || ''; });
+    });
+  });
+}
+new MutationObserver(stackTables).observe(document.body, { childList: true, subtree: true });
